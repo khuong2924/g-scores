@@ -13,9 +13,23 @@ class Api::ScoresController < ApplicationController
             score: score.score
           }
         end
+        render json: { data: scores }
       else
-        # Return all scores if no registration number is provided
-        scores = Score.includes(:student, :subject).map do |score|
+        # Return paginated scores if no registration number is provided
+        scores_relation = Score.includes(:student, :subject)
+                              .page(params[:page])
+                              .per(params[:per_page] || 20)
+  
+        # Get pagination metadata before mapping
+        pagination = {
+          current_page: scores_relation.current_page,
+          total_pages: scores_relation.total_pages,
+          total_count: scores_relation.total_count,
+          per_page: scores_relation.limit_value
+        }
+  
+        # Map the scores after getting pagination metadata
+        scores = scores_relation.map do |score|
           {
             student_name: score.student.name,
             registration_number: score.student.registration_number,
@@ -23,8 +37,11 @@ class Api::ScoresController < ApplicationController
             score: score.score
           }
         end
-      end
   
-      render json: scores
+        render json: {
+          data: scores,
+          pagination: pagination
+        }
+      end
     end
   end
