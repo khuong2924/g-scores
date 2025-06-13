@@ -27,8 +27,22 @@
 threads_count = ENV.fetch("RAILS_MAX_THREADS", 3)
 threads threads_count, threads_count
 
-# Specifies the `port` that Puma will listen on to receive requests; default is 3000.
-port ENV.fetch("PORT", 3000)
+# Specifies the `environment` that Puma will run in.
+environment ENV.fetch("RAILS_ENV") { "development" }
+
+# SSL configuration for production
+if ENV["RAILS_ENV"] == "production"
+  # Enable both HTTP and HTTPS
+  # ssl_bind '0.0.0.0', '3001', {
+  #   key: '/app/config/ssl/server.key',
+  #   cert: '/app/config/ssl/server.crt',
+  #   verify_mode: 'none'
+  # }
+  port ENV.fetch("PORT", 3000)
+else
+  # Specifies the `port` that Puma will listen on to receive requests; default is 3000.
+  port ENV.fetch("PORT", 3000)
+end
 
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
@@ -39,3 +53,4 @@ plugin :solid_queue if ENV["SOLID_QUEUE_IN_PUMA"]
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
 pidfile ENV["PIDFILE"] if ENV["PIDFILE"]
+

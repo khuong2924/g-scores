@@ -19,5 +19,8 @@ module GScoresBe
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Configure maximum file upload size to 100MB
+    # config.middleware.use Rack::MultipartBuffer, 100 * 1024 * 1024
   end
 end
