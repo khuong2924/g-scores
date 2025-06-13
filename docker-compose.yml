@@ -14,6 +14,8 @@ services:
       - app-network
     environment:
       - NODE_ENV=production
+      - VUE_APP_API_URL=http://localhost:3000
+      - VUE_APP_WS_URL=ws://localhost:3000/cable
 
   backend:
     build:
@@ -25,13 +27,18 @@ services:
     environment:
       - RAILS_ENV=production
       - DATABASE_URL=postgres://postgres:postgres@db:5432/g_scores_production
+      - REDIS_URL=redis://redis:6379/1
       - SECRET_KEY_BASE=add2484b5eb59314d86e40eeffb7ecc1298824830ff7ba1a2cefa9ab35833829a0e13d5990c0af8c39c05ecc271cfb19e85f27de639934c13a525d04d6efbd61
       - SSL_KEY_PATH=/app/config/ssl/server.key
       - SSL_CERT_PATH=/app/config/ssl/server.crt
+      - ALLOWED_ORIGINS=http://localhost:80,https://localhost:443,http://localhost:3000
+      - CABLE_ALLOWED_REQUEST_ORIGINS=http://localhost:80,https://localhost:443,http://localhost:3000
+      - CABLE_URL=ws://localhost:3000/cable
     volumes:
       - ./g-scores-be/config/ssl:/app/config/ssl
     depends_on:
       - db
+      - redis
     networks:
       - app-network
 
@@ -46,9 +53,20 @@ services:
     networks:
       - app-network
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
 
 volumes:
   postgres_data:
+  redis_data:

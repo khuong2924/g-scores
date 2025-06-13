@@ -1,4 +1,20 @@
+require 'sidekiq/web'
+
+# Sidekiq Web UI with basic authentication
+Sidekiq::Web.use Rack::Auth::Basic do |username, password|
+  ActiveSupport::SecurityUtils.secure_compare(
+    ::Digest::SHA256.hexdigest(username),
+    ::Digest::SHA256.hexdigest(ENV['SIDEKIQ_USERNAME'] || 'admin')
+  ) &
+  ActiveSupport::SecurityUtils.secure_compare(
+    ::Digest::SHA256.hexdigest(password),
+    ::Digest::SHA256.hexdigest(ENV['SIDEKIQ_PASSWORD'] || 'password')
+  )
+end
+
 Rails.application.routes.draw do
+  mount Sidekiq::Web => '/sidekiq'
+  
   namespace :api do
     get 'scores', to: 'scores#index'
     get 'reports/score_distribution', to: 'reports#score_distribution'

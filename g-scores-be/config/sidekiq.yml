@@ -1,0 +1,12 @@
+:concurrency: 5
+:queues:
+  - default
+  - csv_import
+:scheduler:
+  :schedule:
+    my_job:
+      cron: "0 0 * * *"
+      class: MyJob
+      queue: default
+      args: []
+      description: "This job runs every day at midnight" 

@@ -69,6 +69,11 @@ Rails.application.configure do
   #   authentication: :plain
   # }
 
+  # Action Cable configuration
+  config.action_cable.url = ENV.fetch('CABLE_URL', 'ws://localhost:3000/cable')
+  config.action_cable.allowed_request_origins = ENV.fetch('CABLE_ALLOWED_REQUEST_ORIGINS', 'http://localhost,http://localhost:80,http://localhost:3000,https://localhost,https://localhost:80,https://localhost:3000').split(',')
+  config.action_cable.disable_request_forgery_protection = true
+
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
   config.i18n.fallbacks = true

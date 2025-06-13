@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  </head>
+  <body>
+    <h1>CSV Import Completed</h1>
+    
+    <p>Hello <%= @user.name %>,</p>
+    
+    <p>Your CSV import has been completed successfully.</p>
+    
+    <h2>Import Summary:</h2>
+    <ul>
+      <li>Total records imported: <%= @imported %></li>
+      <li>Number of errors: <%= @errors.size %></li>
+      <li>Duration: <%= @duration %> seconds</li>
+    </ul>
+
+    <% if @errors.any? %>
+      <h2>Errors:</h2>
+      <ul>
+        <% @errors.each do |error| %>
+          <li>
+            Row: <%= error[:row]['sbd'] %> - <%= error[:error] %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+
+    <p>Thank you for using our service!</p>
+  </body>
+</html> 

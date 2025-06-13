@@ -3,13 +3,17 @@
 # not a terminal started via bin/rails console! Add "console" to any action or any ERB template view
 # to make the web console appear.
 development:
-  adapter: async
+  adapter: redis
+  url: redis://localhost:6379/1
+  channel_prefix: g_scores_development
 
 test:
   adapter: test
 
 production:
-  adapter: solid_cable
+  adapter: redis
+  url: <%= ENV.fetch("REDIS_URL") { "redis://redis:6379/1" } %>
+  channel_prefix: g_scores_production
   connects_to:
     database:
       writing: cable

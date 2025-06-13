@@ -33,78 +33,24 @@ module Api
           render json: { error: 'No file uploaded' }, status: :bad_request and return
         end
 
-        file = params[:file]
-        imported = 0
-        errors = []
-        batch = []
-        start_time = Time.current
-
         begin
-          # Map CSV columns to subject codes
-          subject_mapping = {
-            'toan' => 'TOAN',
-            'ngu_van' => 'NGU_VAN',
-            'ngoai_ngu' => 'NGOAI_NGU',
-            'vat_li' => 'VAT_LI',
-            'hoa_hoc' => 'HOA_HOC',
-            'sinh_hoc' => 'SINH_HOC',
-            'lich_su' => 'LICH_SU',
-            'dia_li' => 'DIA_LI',
-            'gdcd' => 'GDCD'
-          }
+          # Save file to temporary location
+          temp_file = Tempfile.new(['import', '.csv'])
+          temp_file.binmode
+          temp_file.write(params[:file].read)
+          temp_file.rewind
 
-          # Preload all subjects to avoid N+1 queries
-          subjects = Subject.where(code: subject_mapping.values).index_by(&:code)
+          # Enqueue background job
+          CsvImportWorker.perform_async(temp_file.path)
 
-          CSV.foreach(file.path, headers: true) do |row|
-            begin
-              student_data = {
-                registration_number: row['sbd'],
-                name: "Student #{row['sbd']}"
-              }
-
-              scores_data = []
-              subject_mapping.each do |csv_column, subject_code|
-                next unless row[csv_column].present?
-                subject = subjects[subject_code]
-                next unless subject
-
-                score_data = {
-                  subject_id: subject.id,
-                  score: row[csv_column]
-                }
-
-                if subject_code == 'NGOAI_NGU' && row['ma_ngoai_ngu'].present?
-                  score_data[:english_level] = row['ma_ngoai_ngu']
-                end
-
-                scores_data << score_data
-              end
-
-              batch << { student: student_data, scores: scores_data }
-              imported += 1
-
-              if batch.size >= BATCH_SIZE
-                process_batch(batch)
-                batch = []
-              end
-            rescue => e
-              errors << { row: row.to_h, error: e.message }
-            end
-          end
-
-          # Process remaining records
-          process_batch(batch) if batch.any?
-
-          duration = Time.current - start_time
           render json: {
-            message: "Import completed",
-            imported: imported,
-            errors: errors,
-            duration: duration.round(2)
-          }, status: :ok
+            message: "Import started",
+            status: "processing"
+          }, status: :accepted
         rescue => e
           render json: { error: e.message }, status: :unprocessable_entity
+        ensure
+          temp_file.close
         end
       end
 
@@ -119,12 +65,17 @@ module Api
               s.name = record[:student][:name]
             end
 
+            scores = []
             record[:scores].each do |score_data|
               score = student.scores.find_or_initialize_by(subject_id: score_data[:subject_id])
               score.score = score_data[:score]
               score.english_level = score_data[:english_level] if score_data[:english_level].present?
               score.save!
+              scores << score
             end
+
+            # Broadcast batch update for this student
+            ScoreBroadcastService.broadcast_batch_update(student.id, scores)
           end
         end
       end
