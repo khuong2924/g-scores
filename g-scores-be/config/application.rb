@@ -20,7 +20,7 @@ module GScoresBe
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
-    # Configure maximum file upload size to 100MB
-    # config.middleware.use Rack::MultipartBuffer, 100 * 1024 * 1024
+    # Note: File upload size limits are configured in config/environments/development.rb
+    # and config/environments/production.rb using config.middleware.use Rack::Multipart
   end
 end
