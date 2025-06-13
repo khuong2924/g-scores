@@ -1,0 +1,3 @@
+[submodule "g-scores-fe"]
+	path = g-scores-fe
+	url = https://github.com/khuong2924/g-scores-fe
