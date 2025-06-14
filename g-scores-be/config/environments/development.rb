@@ -67,8 +67,9 @@ Rails.application.configure do
 
   # Action Cable configuration
   config.action_cable.url = 'ws://localhost:3000/cable'
-  config.action_cable.allowed_request_origins = ['http://localhost:8080', 'http://localhost:3000']
+  config.action_cable.allowed_request_origins = ['http://localhost:8080', 'http://localhost:3000', 'http://localhost', 'ws://localhost:8080', 'ws://localhost:3000']
   config.action_cable.disable_request_forgery_protection = true
+  config.action_cable.mount_path = '/cable'
 
   # Configure Sidekiq
   config.active_job.queue_adapter = :sidekiq

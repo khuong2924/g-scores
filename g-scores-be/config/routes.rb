@@ -14,6 +14,7 @@ end
 
 Rails.application.routes.draw do
   mount Sidekiq::Web => '/sidekiq'
+  mount ActionCable.server => '/cable'
   
   namespace :api do
     get 'scores', to: 'scores#index'
