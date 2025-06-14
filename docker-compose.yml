@@ -14,8 +14,8 @@ services:
       - app-network
     environment:
       - NODE_ENV=production
-      - VUE_APP_API_URL=http://localhost:3000
-      - VUE_APP_WS_URL=ws://localhost:3000/cable
+      - VUE_APP_API_URL=https://truongvinhkhuong.io.vn
+      - VUE_APP_WS_URL=wss://truongvinhkhuong.io.vn/cable
 
   backend:
     build:
@@ -34,9 +34,9 @@ services:
       - SECRET_KEY_BASE=c4f5df38356866bec46b068133f25de3dfd80979d9fb7f2f8cfae4c6c1a1b930b89d9b1d28fe0d246c2ef3b2bdb4b79e6ac72a202298308b90f67805bf09f443
       - SSL_KEY_PATH=/app/config/ssl/server.key
       - SSL_CERT_PATH=/app/config/ssl/server.crt
-      - ALLOWED_ORIGINS=http://localhost:80,https://localhost:443,http://localhost:3000
-      - CABLE_ALLOWED_REQUEST_ORIGINS=http://localhost:80,https://localhost:443,http://localhost:3000
-      - CABLE_URL=ws://localhost:3000/cable
+      - ALLOWED_ORIGINS=https://truongvinhkhuong.io.vn,http://truongvinhkhuong.io.vn
+      - CABLE_ALLOWED_REQUEST_ORIGINS=https://truongvinhkhuong.io.vn,http://truongvinhkhuong.io.vn
+      - CABLE_URL=wss://truongvinhkhuong.io.vn/cable
     volumes:
       - ./g-scores-be:/app
       - ./g-scores-be/log:/app/log
