@@ -22,5 +22,17 @@ module GScoresBe
 
     # Configure file upload size limit
     config.action_dispatch.http_content_length_limit = 100.megabytes
+
+    # Configure CORS
+    config.middleware.insert_before 0, Rack::Cors do
+      allow do
+        origins 'http://localhost', 'http://localhost:8080'
+        resource '*',
+          headers: :any,
+          methods: [:get, :post, :put, :patch, :delete, :options, :head],
+          credentials: true,
+          expose: ['Authorization', 'Content-Type', 'Accept', 'Access-Control-Allow-Origin']
+      end
+    end
   end
 end

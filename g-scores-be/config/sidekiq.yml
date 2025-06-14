@@ -9,4 +9,12 @@
       class: MyJob
       queue: default
       args: []
-      description: "This job runs every day at midnight" 
+      description: "This job runs every day at midnight"
+:logfile: log/sidekiq.log
+:pidfile: tmp/pids/sidekiq.pid
+:log_level: info
+:log_format: json
+:log_rotation:
+  :size: 10MB
+  :age: 7
+  :keep: 5 

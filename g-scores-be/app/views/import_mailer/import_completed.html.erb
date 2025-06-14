@@ -6,7 +6,7 @@
   <body>
     <h1>CSV Import Completed</h1>
     
-    <p>Hello <%= @user.name %>,</p>
+    <p>Hello,</p>
     
     <p>Your CSV import has been completed successfully.</p>
     
@@ -22,7 +22,7 @@
       <ul>
         <% @errors.each do |error| %>
           <li>
-            Row: <%= error[:row]['sbd'] %> - <%= error[:error] %>
+            Row: <%= error['row']['sbd'] %> - <%= error['error'] %>
           </li>
         <% end %>
       </ul>

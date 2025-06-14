@@ -4,9 +4,24 @@ module Api
       BATCH_SIZE = 1000
 
       def search
-        student = Student.find_by(registration_number: params[:registration_number])
-        if student
-          render json: student, include: { scores: { include: :subject } }
+        raw_score = RawScore.find_by(registration_number: params[:registration_number])
+        if raw_score
+          render json: {
+            registration_number: raw_score.registration_number,
+            name: raw_score.name,
+            scores: {
+              toan: raw_score.toan,
+              ngu_van: raw_score.ngu_van,
+              ngoai_ngu: raw_score.ngoai_ngu,
+              ma_ngoai_ngu: raw_score.ma_ngoai_ngu,
+              vat_li: raw_score.vat_li,
+              hoa_hoc: raw_score.hoa_hoc,
+              sinh_hoc: raw_score.sinh_hoc,
+              lich_su: raw_score.lich_su,
+              dia_li: raw_score.dia_li,
+              gdcd: raw_score.gdcd
+            }
+          }
         else
           render json: { error: 'Không tìm thấy kết quả' }, status: :not_found
         end
@@ -17,15 +32,15 @@ module Api
         statistics = {}
 
         subjects.each do |subject_code|
-          statistics[subject_code] = Student.score_distribution_by_subject(subject_code)
+          statistics[subject_code] = RawScore.score_distribution_by_subject(subject_code.downcase)
         end
 
         render json: statistics
       end
 
       def top_students_group_a
-        students = Student.top_students_group_a
-        render json: students, include: { scores: { include: :subject } }
+        students = RawScore.top_students_group_a
+        render json: students
       end
 
       def import_csv
@@ -34,14 +49,18 @@ module Api
         end
 
         begin
-          # Save file to temporary location
-          temp_file = Tempfile.new(['import', '.csv'])
-          temp_file.binmode
-          temp_file.write(params[:file].read)
-          temp_file.rewind
+          # Create tmp directory if it doesn't exist
+          tmp_dir = Rails.root.join('tmp', 'csv_imports')
+          FileUtils.mkdir_p(tmp_dir)
+
+          # Save file to shared volume
+          file_path = File.join(tmp_dir, "import_#{Time.now.to_i}.csv")
+          File.open(file_path, 'wb') do |file|
+            file.write(params[:file].read)
+          end
 
           # Enqueue background job
-          CsvImportWorker.perform_async(temp_file.path)
+          RawScoreImportWorker.perform_async(file_path)
 
           render json: {
             message: "Import started",
@@ -49,8 +68,6 @@ module Api
           }, status: :accepted
         rescue => e
           render json: { error: e.message }, status: :unprocessable_entity
-        ensure
-          temp_file.close
         end
       end
 

@@ -26,35 +26,72 @@ services:
       - "3001:3001"
     environment:
       - RAILS_ENV=production
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/g_scores_production
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=g_scores_production
       - REDIS_URL=redis://redis:6379/1
-      - SECRET_KEY_BASE=add2484b5eb59314d86e40eeffb7ecc1298824830ff7ba1a2cefa9ab35833829a0e13d5990c0af8c39c05ecc271cfb19e85f27de639934c13a525d04d6efbd61
+      - SECRET_KEY_BASE=c4f5df38356866bec46b068133f25de3dfd80979d9fb7f2f8cfae4c6c1a1b930b89d9b1d28fe0d246c2ef3b2bdb4b79e6ac72a202298308b90f67805bf09f443
       - SSL_KEY_PATH=/app/config/ssl/server.key
       - SSL_CERT_PATH=/app/config/ssl/server.crt
       - ALLOWED_ORIGINS=http://localhost:80,https://localhost:443,http://localhost:3000
       - CABLE_ALLOWED_REQUEST_ORIGINS=http://localhost:80,https://localhost:443,http://localhost:3000
       - CABLE_URL=ws://localhost:3000/cable
     volumes:
-      - ./g-scores-be/config/ssl:/app/config/ssl
+      - ./g-scores-be:/app
+      - ./g-scores-be/log:/app/log
+      - ./tmp/csv_imports:/app/tmp/csv_imports
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app-network
+
+  sidekiq:
+    build:
+      context: ./g-scores-be
+      dockerfile: Dockerfile
+    environment:
+      - RAILS_ENV=production
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=g_scores_production
+      - REDIS_URL=redis://redis:6379/1
+      - SECRET_KEY_BASE=c4f5df38356866bec46b068133f25de3dfd80979d9fb7f2f8cfae4c6c1a1b930b89d9b1d28fe0d246c2ef3b2bdb4b79e6ac72a202298308b90f67805bf09f443
+    volumes:
+      - ./g-scores-be:/app
+      - ./g-scores-be/log:/app/log
+      - ./tmp/csv_imports:/app/tmp/csv_imports
     depends_on:
       - db
       - redis
     networks:
       - app-network
+    command: bundle exec sidekiq -C config/sidekiq.yml
 
   db:
-    image: postgres:14-alpine
+    image: postgres:15
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=g_scores_production
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:7
     ports:
       - "6379:6379"
     volumes:

@@ -1,13 +1,12 @@
 class ImportMailer < ApplicationMailer
-  def import_completed(user, result)
-    @user = user
+  def import_completed(email, result)
     @result = result
     @imported = result[:imported]
     @errors = result[:errors]
     @duration = result[:duration]
 
     mail(
-      to: @user.email,
+      to: email,
       subject: "CSV Import Completed - #{@imported} records imported"
     )
   end

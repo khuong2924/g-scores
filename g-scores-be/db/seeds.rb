@@ -2,15 +2,15 @@ require 'csv'
 
 # Create subjects
 subjects = [
-  { code: 'TOAN', name: 'Toán' },
-  { code: 'NGU_VAN', name: 'Ngữ Văn' },
-  { code: 'NGOAI_NGU', name: 'Ngoại Ngữ' },
-  { code: 'VAT_LI', name: 'Vật Lý' },
-  { code: 'HOA_HOC', name: 'Hóa Học' },
-  { code: 'SINH_HOC', name: 'Sinh Học' },
-  { code: 'LICH_SU', name: 'Lịch Sử' },
-  { code: 'DIA_LI', name: 'Địa Lý' },
-  { code: 'GDCD', name: 'GDCD' }
+  { name: 'Toán', code: 'TOAN' },
+  { name: 'Ngữ Văn', code: 'NGU_VAN' },
+  { name: 'Ngoại Ngữ', code: 'NGOAI_NGU' },
+  { name: 'Vật Lý', code: 'VAT_LI' },
+  { name: 'Hóa Học', code: 'HOA_HOC' },
+  { name: 'Sinh Học', code: 'SINH_HOC' },
+  { name: 'Lịch Sử', code: 'LICH_SU' },
+  { name: 'Địa Lý', code: 'DIA_LI' },
+  { name: 'GDCD', code: 'GDCD' }
 ]
 
 subjects.each do |subject|

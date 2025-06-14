@@ -1,6 +1,7 @@
 require 'sidekiq/web'
+require 'sidekiq/cron/web' if defined?(Sidekiq::Cron)
 
-# Sidekiq Web UI with basic authentication
+# Authentication for Sidekiq Web UI
 Sidekiq::Web.use Rack::Auth::Basic do |username, password|
   ActiveSupport::SecurityUtils.secure_compare(
     ::Digest::SHA256.hexdigest(username),
