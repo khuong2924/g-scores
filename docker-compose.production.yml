@@ -1,1 +1,134 @@
- 
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./g-scores-fe
+      dockerfile: Dockerfile.production
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=production
+      - VUE_APP_API_URL=https://truongvinhkhuong.io.vn/api
+      - VUE_APP_WS_URL=wss://truongvinhkhuong.io.vn/cable
+      - API_URL=http://backend:3000
+      - WS_URL=ws://backend:3000/cable
+    volumes:
+      - ./g-scores-fe/dist:/usr/share/nginx/html
+      - ./g-scores-fe/nginx/default.conf.production:/etc/nginx/conf.d/default.conf
+      - ./certs:/etc/nginx/certs
+    restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build:
+      context: ./g-scores-be
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    environment:
+      - RAILS_ENV=production
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=g_scores_production
+      - REDIS_URL=redis://redis:6379/1
+      - SECRET_KEY_BASE=c4f5df38356866bec46b068133f25de3dfd80979d9fb7f2f8cfae4c6c1a1b930b89d9b1d28fe0d246c2ef3b2bdb4b79e6ac72a202298308b90f67805bf09f443
+      - ALLOWED_ORIGINS=https://truongvinhkhuong.io.vn
+      - CABLE_ALLOWED_REQUEST_ORIGINS=https://truongvinhkhuong.io.vn
+      - CABLE_URL=wss://truongvinhkhuong.io.vn/cable
+    volumes:
+      - ./g-scores-be:/app
+      - ./g-scores-be/log:/app/log
+      - ./tmp/csv_imports:/app/tmp/csv_imports
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  sidekiq:
+    build:
+      context: ./g-scores-be
+      dockerfile: Dockerfile
+    environment:
+      - RAILS_ENV=production
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=g_scores_production
+      - REDIS_URL=redis://redis:6379/1
+      - SECRET_KEY_BASE=c4f5df38356866bec46b068133f25de3dfd80979d9fb7f2f8cfae4c6c1a1b930b89d9b1d28fe0d246c2ef3b2bdb4b79e6ac72a202298308b90f67805bf09f443
+    volumes:
+      - ./g-scores-be:/app
+      - ./g-scores-be/log:/app/log
+      - ./tmp/csv_imports:/app/tmp/csv_imports
+    depends_on:
+      - db
+      - redis
+    networks:
+      - app-network
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    healthcheck:
+      test: ["CMD", "ps", "aux", "|", "grep", "sidekiq"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=g_scores_production
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data: 
