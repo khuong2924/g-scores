@@ -222,17 +222,3 @@ docker-compose -f docker-compose.production.yml up -d
 - Large CSV imports are processed asynchronously
 - Monitor Sidekiq queue size and processing time
 
-## Security
-
-1. API Authentication
-- Implement authentication for sensitive endpoints
-- Use HTTPS in production
-
-2. Data Protection
-- Sanitize user inputs
-- Implement rate limiting
-- Regular security updates
-
-## License
-
-MIT
