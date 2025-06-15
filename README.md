@@ -1,6 +1,4 @@
-# G-Scores Application
-
-A web application for managing and analyzing high school graduation exam scores.
+# G-Scores
 
 ## System Requirements
 
